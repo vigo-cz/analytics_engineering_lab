@@ -1,319 +1,247 @@
-# Terraform Infrastructure for AWS
+# Terraform Infrastructure
 
-Complete Terraform setup for deploying the Analytics Engineering Lab to AWS.
+This directory contains Terraform configurations for deploying the Analytics Engineering Lab to cloud platforms.
 
-## Architecture
+## Available Platforms
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        Internet                              │
-└────────────────────────┬────────────────────────────────────┘
-                         │
-                    ┌────▼────┐
-                    │   ALB   │ (Load Balancer)
-                    └────┬────┘
-                         │
-        ┌────────────────┼────────────────┐
-        │                │                │
-   ┌────▼────┐     ┌────▼────┐     ┌────▼────┐
-   │Streamlit│     │ Jupyter │     │Metabase │
-   └────┬────┘     └────┬────┘     └────┬────┘
-        │                │                │
-        └────────────────┼────────────────┘
-                         │
-                    ┌────▼────┐
-                    │   ECS   │ (Fargate)
-                    │ Private │
-                    │ Subnet  │
-                    └────┬────┘
-                         │
-                    ┌────▼────┐
-                    │   RDS   │ (PostgreSQL)
-                    │ Private │
-                    │ Subnet  │
-                    └─────────┘
-```
+### AWS
+**Location**: `aws/`  
+**Services**: ECS Fargate, RDS PostgreSQL, ALB, ECR  
+**Best for**: Enterprise deployments, complex networking requirements  
+**Cost**: ~$50-100/month (dev), ~$200-400/month (prod)
 
-## Resources Created
+[📖 AWS Documentation](./aws/README.md)
 
-- **VPC** with public and private subnets across 2 AZs
-- **Application Load Balancer** (ALB) for routing traffic
-- **ECS Fargate** cluster and service for running containers
-- **RDS PostgreSQL** database (Multi-AZ for production)
-- **ECR** repository for Docker images
-- **Security Groups** with least-privilege access
-- **IAM Roles** for ECS tasks
-- **Secrets Manager** for sensitive data
-- **CloudWatch Logs** for monitoring
+### GCP
+**Location**: `gcp/`  
+**Services**: Cloud Run, Cloud SQL, Artifact Registry  
+**Best for**: Serverless, cost-effective deployments  
+**Cost**: ~$10-30/month (dev), ~$50-150/month (prod)
 
-## Prerequisites
+[📖 GCP Documentation](./gcp/README.md)
 
-1. **AWS Account** with appropriate permissions
-2. **AWS CLI** installed and configured
-3. **Terraform** >= 1.0 installed
-4. **Docker** installed (for building images)
+## Quick Comparison
 
-## Quick Start
+| Feature | AWS | GCP |
+|---------|-----|-----|
+| **Compute** | ECS Fargate (containers) | Cloud Run (serverless) |
+| **Database** | RDS PostgreSQL | Cloud SQL PostgreSQL |
+| **Networking** | VPC + ALB + NAT Gateway | VPC + VPC Connector |
+| **Scaling** | Min 1 task running | Scale to zero ✅ |
+| **Pricing Model** | Pay per hour | Pay per 100ms |
+| **Setup Complexity** | More complex | Simpler |
+| **Dev Cost** | ~$50-100/month | ~$10-30/month |
+| **Prod Cost** | ~$200-400/month | ~$50-150/month |
 
-### 1. Configure AWS Credentials
+## Which Should You Choose?
+
+### Choose AWS if:
+- ✅ You need enterprise-grade features
+- ✅ You require complex networking (VPNs, Direct Connect)
+- ✅ You're already using AWS services
+- ✅ You need more control over infrastructure
+- ✅ You require always-on services
+
+### Choose GCP if:
+- ✅ You want **lower costs** (especially for dev/staging)
+- ✅ You prefer **serverless** (scale to zero)
+- ✅ You want **simpler** infrastructure
+- ✅ You have **variable traffic** (Cloud Run scales automatically)
+- ✅ You want **faster deployments**
+
+**Recommendation for this project**: Start with **GCP** for cost savings and simplicity. You can always migrate to AWS later if needed.
+
+## Getting Started
+
+### 1. Choose Your Platform
 
 ```bash
-aws configure
-# Enter your AWS Access Key ID, Secret Access Key, and region
+# For AWS
+cd infrastructure/terraform/aws
+
+# For GCP
+cd infrastructure/terraform/gcp
 ```
 
-### 2. Set Variables
+### 2. Follow Platform-Specific Guide
+
+Each platform has its own detailed README:
+- [AWS Setup Guide](./aws/README.md)
+- [GCP Setup Guide](./gcp/README.md)
+
+## Directory Structure
+
+```
+terraform/
+├── aws/                          # AWS infrastructure
+│   ├── main.tf                  # Provider configuration
+│   ├── variables.tf             # Input variables
+│   ├── outputs.tf               # Output values
+│   ├── vpc.tf                   # VPC networking
+│   ├── ecs.tf                   # ECS Fargate
+│   ├── rds.tf                   # RDS PostgreSQL
+│   ├── alb.tf                   # Application Load Balancer
+│   ├── ecr.tf                   # Elastic Container Registry
+│   ├── security_groups.tf       # Security groups
+│   ├── secrets.tf               # Secrets Manager
+│   ├── terraform.tfvars.example # Example variables
+│   └── README.md                # AWS documentation
+│
+├── gcp/                          # GCP infrastructure
+│   ├── main.tf                  # Provider configuration
+│   ├── variables.tf             # Input variables
+│   ├── outputs.tf               # Output values
+│   ├── vpc.tf                   # VPC networking
+│   ├── cloud_run.tf             # Cloud Run service
+│   ├── cloud_sql.tf             # Cloud SQL PostgreSQL
+│   ├── artifact_registry.tf     # Artifact Registry
+│   ├── iam.tf                   # IAM & API enablement
+│   ├── secrets.tf               # Secret Manager
+│   ├── terraform.tfvars.example # Example variables
+│   └── README.md                # GCP documentation
+│
+└── README.md                     # This file
+```
+
+## Common Workflow
+
+Regardless of platform, the workflow is similar:
 
 ```bash
-# Copy example variables file
+# 1. Navigate to platform directory
+cd aws/  # or gcp/
+
+# 2. Copy and edit variables
 cp terraform.tfvars.example terraform.tfvars
-
 # Edit terraform.tfvars with your values
-# Set database password via environment variable
-export TF_VAR_db_password="your-secure-password-here"
-```
 
-### 3. Initialize Terraform
-
-```bash
-cd infrastructure/terraform
-terraform init
-```
-
-### 4. Plan Deployment
-
-```bash
-terraform plan
-```
-
-Review the plan to see what resources will be created.
-
-### 5. Deploy Infrastructure
-
-```bash
-terraform apply
-```
-
-Type `yes` when prompted. This will take ~10-15 minutes.
-
-### 6. Build and Push Docker Image
-
-```bash
-# Get ECR login command from Terraform output
-aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $(terraform output -raw ecr_repository_url | cut -d'/' -f1)
-
-# Build image
-docker build -t $(terraform output -raw ecr_repository_url):latest ../../
-
-# Push image
-docker push $(terraform output -raw ecr_repository_url):latest
-```
-
-### 7. Update ECS Service
-
-```bash
-aws ecs update-service \
-  --cluster $(terraform output -raw ecs_cluster_name) \
-  --service $(terraform output -raw ecs_service_name) \
-  --force-new-deployment \
-  --region us-east-1
-```
-
-### 8. Access Your Applications
-
-```bash
-# Get URLs
-terraform output alb_url
-terraform output streamlit_url
-terraform output jupyter_url
-terraform output metabase_url
-```
-
-## Configuration
-
-### Environment Variables
-
-Set these before running Terraform:
-
-```bash
+# 3. Set secrets via environment variables
 export TF_VAR_db_password="your-secure-password"
-export TF_VAR_aws_region="us-east-1"
-export TF_VAR_environment="dev"
-```
 
-### terraform.tfvars
-
-Key variables to customize:
-
-```hcl
-aws_region  = "us-east-1"
-environment = "dev"  # or "staging", "prod"
-
-# ECS sizing
-ecs_task_cpu    = 2048  # 2 vCPUs
-ecs_task_memory = 4096  # 4 GB
-
-# RDS sizing
-db_instance_class = "db.t3.micro"  # Free tier
-```
-
-## Cost Estimation
-
-**Development Environment** (~$50-100/month):
-- ECS Fargate: ~$30/month (2 vCPU, 4GB RAM)
-- RDS db.t3.micro: ~$15/month
-- ALB: ~$20/month
-- NAT Gateway: ~$30/month
-- Data transfer: Variable
-
-**Production Environment** (~$200-400/month):
-- ECS Fargate (larger): ~$100/month
-- RDS Multi-AZ: ~$60/month
-- ALB: ~$20/month
-- NAT Gateway: ~$60/month (2 AZs)
-- Data transfer: Variable
-
-**Cost Optimization Tips**:
-1. Use smaller instance types for dev
-2. Stop ECS tasks when not in use
-3. Use RDS snapshots instead of running instances for dev
-4. Consider AWS Free Tier for first 12 months
-
-## Deployment Workflow
-
-### Initial Deployment
-```bash
+# 4. Initialize Terraform
 terraform init
+
+# 5. Review plan
 terraform plan
+
+# 6. Apply infrastructure
 terraform apply
-# Build and push Docker image
-# Update ECS service
+
+# 7. Build and push Docker image
+# (See platform-specific README)
+
+# 8. Deploy application
+# (See platform-specific README)
 ```
 
-### Update Application Code
-```bash
-# Build new image
-docker build -t $(terraform output -raw ecr_repository_url):latest .
-docker push $(terraform output -raw ecr_repository_url):latest
+## Cost Optimization Tips
 
-# Force new deployment
-aws ecs update-service --cluster <cluster-name> --service <service-name> --force-new-deployment
-```
+### For Both Platforms:
+1. **Use smaller instance sizes** for dev/staging
+2. **Stop resources** when not in use
+3. **Use spot/preemptible instances** for non-critical workloads
+4. **Monitor costs** regularly
+5. **Set up billing alerts**
 
-### Update Infrastructure
+### AWS-Specific:
+- Use Fargate Spot for dev environments
+- Use RDS snapshots instead of running instances
+- Consider Aurora Serverless v2 for variable workloads
+
+### GCP-Specific:
+- Enable Cloud Run scale-to-zero for dev
+- Use Cloud SQL automatic storage increases
+- Use committed use discounts for prod
+
+## Multi-Cloud Strategy
+
+You can deploy to both platforms simultaneously:
+
 ```bash
-# Modify .tf files
-terraform plan
+# Deploy to AWS
+cd aws/
+terraform apply
+
+# Deploy to GCP
+cd ../gcp/
 terraform apply
 ```
 
-### Destroy Infrastructure
-```bash
-terraform destroy
+**Use cases**:
+- **High availability** across cloud providers
+- **Cost comparison** testing
+- **Migration** from one platform to another
+- **Disaster recovery**
+
+## State Management
+
+### Local State (Default)
+Terraform state is stored locally in `terraform.tfstate`.
+
+**⚠️ Warning**: Don't commit `terraform.tfstate` to git!
+
+### Remote State (Recommended for Teams)
+
+**AWS (S3 + DynamoDB)**:
+```hcl
+# In aws/main.tf, uncomment:
+backend "s3" {
+  bucket         = "your-terraform-state-bucket"
+  key            = "analytics-lab/terraform.tfstate"
+  region         = "us-east-1"
+  encrypt        = true
+  dynamodb_table = "terraform-state-lock"
+}
 ```
 
-## Environments
-
-### Development
-```bash
-terraform workspace new dev
-terraform workspace select dev
-terraform apply -var-file="dev.tfvars"
+**GCP (Cloud Storage)**:
+```hcl
+# In gcp/main.tf, uncomment:
+backend "gcs" {
+  bucket = "your-terraform-state-bucket"
+  prefix = "analytics-lab/terraform.tfstate"
+}
 ```
-
-### Production
-```bash
-terraform workspace new prod
-terraform workspace select prod
-terraform apply -var-file="prod.tfvars"
-```
-
-## Monitoring
-
-### CloudWatch Logs
-```bash
-aws logs tail /ecs/analytics-lab-dev --follow
-```
-
-### ECS Service Status
-```bash
-aws ecs describe-services \
-  --cluster analytics-lab-cluster-dev \
-  --services analytics-lab-service-dev
-```
-
-### RDS Status
-```bash
-aws rds describe-db-instances \
-  --db-instance-identifier analytics-lab-postgres-dev
-```
-
-## Troubleshooting
-
-### ECS Tasks Not Starting
-```bash
-# Check task logs
-aws logs tail /ecs/analytics-lab-dev --follow
-
-# Check task definition
-aws ecs describe-task-definition --task-definition analytics-lab-dev
-
-# Check service events
-aws ecs describe-services --cluster <cluster> --services <service>
-```
-
-### Cannot Access ALB
-- Check security groups
-- Verify target group health checks
-- Check ECS task status
-
-### Database Connection Issues
-- Verify security group rules
-- Check RDS endpoint in environment variables
-- Verify secrets in Secrets Manager
 
 ## Security Best Practices
 
-1. **Never commit secrets** to version control
-2. **Use Secrets Manager** for sensitive data
-3. **Enable encryption** at rest and in transit
-4. **Use private subnets** for ECS tasks and RDS
-5. **Restrict security groups** to minimum required access
-6. **Enable CloudWatch Logs** for audit trail
-7. **Use IAM roles** instead of access keys
-8. **Enable MFA** for AWS account
+1. **Never commit secrets** - Use environment variables or secret managers
+2. **Use remote state** with encryption
+3. **Enable state locking** to prevent concurrent modifications
+4. **Use separate environments** (dev, staging, prod)
+5. **Review plans** before applying
+6. **Use least-privilege IAM** roles
+7. **Enable audit logging**
+8. **Rotate credentials** regularly
 
-## Backup and Recovery
+## Troubleshooting
 
-### RDS Automated Backups
-- Retention: 7 days (configurable)
-- Backup window: 03:00-04:00 UTC
+### Common Issues
 
-### Manual RDS Snapshot
-```bash
-aws rds create-db-snapshot \
-  --db-instance-identifier analytics-lab-postgres-dev \
-  --db-snapshot-identifier analytics-lab-snapshot-$(date +%Y%m%d)
-```
+**Terraform init fails**:
+- Check internet connection
+- Verify credentials are configured
+- Ensure required APIs are enabled (GCP)
 
-### Restore from Snapshot
-```bash
-aws rds restore-db-instance-from-db-snapshot \
-  --db-instance-identifier analytics-lab-postgres-restored \
-  --db-snapshot-identifier analytics-lab-snapshot-20250123
-```
+**Apply fails with permission errors**:
+- Verify IAM roles/permissions
+- Check service account has required access
+- Enable required APIs
+
+**State lock errors**:
+- Wait for other operations to complete
+- Force unlock if necessary (use with caution)
+
+### Getting Help
+
+- Check platform-specific README
+- Review Terraform error messages
+- Check cloud provider console
+- Review logs in CloudWatch (AWS) or Cloud Logging (GCP)
 
 ## Resources
 
-- [Terraform AWS Provider Documentation](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
-- [AWS ECS Documentation](https://docs.aws.amazon.com/ecs/)
-- [AWS RDS Documentation](https://docs.aws.amazon.com/rds/)
+- [Terraform Documentation](https://www.terraform.io/docs)
 - [Terraform Best Practices](https://www.terraform-best-practices.com/)
-
-## Support
-
-For issues or questions:
-1. Check CloudWatch Logs
-2. Review Terraform plan output
-3. Consult AWS documentation
-4. Check security group rules
+- [AWS Provider Documentation](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
+- [GCP Provider Documentation](https://registry.terraform.io/providers/hashicorp/google/latest/docs)
