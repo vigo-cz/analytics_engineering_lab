@@ -44,8 +44,11 @@ logs/
 *.joblib
 *.model
 *.ckpt
-data/raw/*
-!data/raw/*/
+data/raw/**/*.csv
+data/raw/**/*.parquet
+data/raw/**/*.json
+data/raw/**/*.xlsx
+data/raw/**/*.xls
 !data/raw/**/README.md
 data/processed/
 models/trained/
