@@ -36,8 +36,11 @@ services:
       POSTGRES_USER: analytics
       POSTGRES_PASSWORD: analytics_password
       POSTGRES_DB: analytics_db
+      # Create metabase database on init
+      POSTGRES_MULTIPLE_DATABASES: metabase
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      - ./infrastructure/docker/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
     ports:
       - "5432:5432"
     networks:
