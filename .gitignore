@@ -44,7 +44,9 @@ logs/
 *.joblib
 *.model
 *.ckpt
-data/raw/
+data/raw/*
+!data/raw/*/
+!data/raw/**/README.md
 data/processed/
 models/trained/
 mlruns/
