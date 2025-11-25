@@ -53,6 +53,8 @@ RUN pip install --upgrade pip && \
     streamlit \
     plotly \
     dash \
+    # Data sources
+    kaggle \
     # Utilities
     python-dotenv \
     pyyaml \
