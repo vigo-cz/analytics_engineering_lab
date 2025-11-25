@@ -12,7 +12,6 @@ import zipfile
 import urllib.request
 from pathlib import Path
 import duckdb
-import pandas as pd
 
 # Configuration
 DATA_DIR = Path("/workspace/data/raw/olist")
@@ -110,12 +109,10 @@ def load_csv_to_duckdb(conn, table_name, csv_file):
     print(f"  📊 Loading {table_name}...", end=" ")
     
     try:
-        # Read CSV with pandas first to handle encoding issues
-        df = pd.read_csv(file_path, encoding='utf-8', low_memory=False)
-        
-        # Load into DuckDB
+        # Load directly into DuckDB using read_csv_auto
+        # This is faster and handles type inference automatically
         conn.execute(f"DROP TABLE IF EXISTS raw.{table_name}")
-        conn.execute(f"CREATE TABLE raw.{table_name} AS SELECT * FROM df")
+        conn.execute(f"CREATE TABLE raw.{table_name} AS SELECT * FROM read_csv_auto('{file_path}', normalize_names=True)")
         
         # Get row count
         row_count = conn.execute(f"SELECT COUNT(*) FROM raw.{table_name}").fetchone()[0]
@@ -148,7 +145,7 @@ def create_summary_views(conn):
     conn.execute("""
         CREATE OR REPLACE VIEW staging.orders_summary AS
         SELECT 
-            DATE_TRUNC('month', order_purchase_timestamp) as order_month,
+            DATE_TRUNC('month', CAST(order_purchase_timestamp AS TIMESTAMP)) as order_month,
             COUNT(*) as total_orders,
             COUNT(DISTINCT customer_id) as unique_customers,
             SUM(CASE WHEN order_status = 'delivered' THEN 1 ELSE 0 END) as delivered_orders
@@ -162,7 +159,7 @@ def create_summary_views(conn):
     conn.execute("""
         CREATE OR REPLACE VIEW staging.revenue_summary AS
         SELECT 
-            DATE_TRUNC('month', o.order_purchase_timestamp) as order_month,
+            DATE_TRUNC('month', CAST(o.order_purchase_timestamp AS TIMESTAMP)) as order_month,
             SUM(oi.price) as total_revenue,
             SUM(oi.freight_value) as total_freight,
             COUNT(DISTINCT oi.order_id) as orders_with_items,
