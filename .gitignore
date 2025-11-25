@@ -76,6 +76,8 @@ secrets/
 *.pem
 *.key
 credentials.json
+kaggle.json
+.kaggle/
 
 # Temporary files
 tmp/
