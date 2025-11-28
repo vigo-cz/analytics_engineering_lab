@@ -68,11 +68,33 @@ services:
     environment:
       MB_DB_FILE: /metabase-data/metabase.db
 
+  # ClickHouse (OLAP database for analytics)
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: analytics-clickhouse
+    ports:
+      - "8123:8123" # HTTP interface
+      - "9000:9000" # Native TCP interface
+    networks:
+      - analytics-network
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+    environment:
+      CLICKHOUSE_DB: olist
+      CLICKHOUSE_USER: analytics
+      CLICKHOUSE_PASSWORD: analytics_password
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+
 volumes:
   analytics-data:
   dbt-artifacts:
   postgres-data:
   metabase-data:
+  clickhouse-data:
 
 
 networks:
