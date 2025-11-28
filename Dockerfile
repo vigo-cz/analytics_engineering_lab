@@ -55,6 +55,7 @@ RUN pip install --upgrade pip && \
     dash \
     # Data sources
     kaggle \
+    clickhouse-connect \
     # Utilities
     python-dotenv \
     pyyaml \
