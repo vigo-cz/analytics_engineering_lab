@@ -113,9 +113,23 @@ def sync_table(duck_conn, ch_client, schema, table):
         print(f"  ℹ️  No data to sync")
         return
     
+    # Handle NaT and NaN values properly
+    # Convert timestamp columns to handle NaT
+    import pandas as pd
+    import numpy as np
+    
+    for col in df.columns:
+        # Check if column is datetime type
+        if pd.api.types.is_datetime64_any_dtype(df[col]):
+            # Replace NaT with None
+            df[col] = df[col].replace({pd.NaT: None})
+        # Replace NaN with None for all columns
+        elif df[col].dtype == 'float64' or df[col].dtype == 'float32':
+            df[col] = df[col].replace({np.nan: None})
+    
     # Convert DataFrame to list of tuples for ClickHouse
-    # Replace NaN with None for ClickHouse
-    df = df.where(df.notna(), None)
+    # Use fillna(None) as final safety net
+    df = df.fillna(value=None)
     data = [tuple(row) for row in df.values]
     
     # Insert into ClickHouse
