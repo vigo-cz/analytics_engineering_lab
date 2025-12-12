@@ -34,3 +34,15 @@ models:
     # Config indicated by + and applies to all files under models/example/
     example:
       +materialized: view
+    
+    # Olist models configuration
+    staging:
+      olist:
+        +materialized: view
+        +schema: staging
+    
+    marts:
+      core:
+        +materialized: table
+        +schema: marts
+

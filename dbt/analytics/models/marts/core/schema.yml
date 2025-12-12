@@ -1,0 +1,46 @@
+version: 2
+
+models:
+  - name: fct_order_items
+    description: Fact table for order items with denormalized dimensions
+    columns:
+      - name: order_id
+        description: Order identifier
+      - name: order_item_id
+        description: Item identifier within the order
+      - name: order_purchased_at
+        description: When the order was purchased
+      - name: order_month
+        description: Month of purchase (for aggregations)
+      - name: item_total
+        description: Total item value (price + freight)
+      - name: product_category
+        description: Product category in English
+
+  - name: monthly_revenue
+    description: Monthly aggregated revenue and order metrics
+    columns:
+      - name: order_month
+        description: Month of orders
+        tests:
+          - unique
+          - not_null
+      - name: total_revenue
+        description: Total revenue for the month
+      - name: total_orders
+        description: Number of orders in the month
+      - name: avg_order_value
+        description: Average order value
+
+  - name: product_category_performance
+    description: Product category performance metrics
+    columns:
+      - name: product_category
+        description: Product category name
+        tests:
+          - unique
+          - not_null
+      - name: total_revenue
+        description: Total revenue for this category
+      - name: total_items_sold
+        description: Number of items sold in this category
