@@ -1,0 +1,76 @@
+version: 2
+
+sources:
+  - name: olist_raw
+    description: Raw Olist Brazilian E-commerce data
+    database: olist_ecommerce
+    schema: raw
+    tables:
+      - name: orders
+        description: Order information including status and timestamps
+      - name: order_items
+        description: Items within each order with pricing
+      - name: customers
+        description: Customer information and location
+      - name: products
+        description: Product catalog with dimensions
+      - name: sellers
+        description: Seller information
+      - name: order_payments
+        description: Payment information for orders
+      - name: order_reviews
+        description: Customer reviews and ratings
+      - name: geolocation
+        description: Brazilian zip code geolocation data
+      - name: product_category_name_translation
+        description: Product category translations to English
+
+models:
+  - name: stg_olist__orders
+    description: Staging model for orders with cleaned timestamps
+    columns:
+      - name: order_id
+        description: Unique identifier for the order
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        description: Foreign key to customers
+        tests:
+          - not_null
+      - name: order_status
+        description: Current status of the order
+      - name: order_purchased_at
+        description: Timestamp when the order was purchased
+
+  - name: stg_olist__order_items
+    description: Staging model for order items
+    columns:
+      - name: order_id
+        description: Foreign key to orders
+        tests:
+          - not_null
+      - name: product_id
+        description: Foreign key to products
+      - name: price
+        description: Item price in BRL
+
+  - name: stg_olist__customers
+    description: Staging model for customers
+    columns:
+      - name: customer_id
+        description: Unique identifier for the customer
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_olist__products
+    description: Staging model for products with English category names
+    columns:
+      - name: product_id
+        description: Unique identifier for the product
+        tests:
+          - unique
+          - not_null
+      - name: product_category_name_english
+        description: Product category in English
